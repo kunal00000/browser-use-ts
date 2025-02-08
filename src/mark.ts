@@ -1,4 +1,6 @@
 import type { Page } from "playwright";
+import type { ElementHandle } from "playwright";
+
 export async function marker(page: Page) {
   // Find all potentially clickable elements
   const clickableElements = await page.$$(
@@ -15,7 +17,7 @@ export async function marker(page: Page) {
   );
 
   // Create a Map to store elements with their indices
-  const elementMap = new Map();
+  const elementMap: Map<number, ElementHandle> = new Map();
 
   // Assign index and color to each element
   for (let i = 0; i < clickableElements.length; i++) {
@@ -33,6 +35,10 @@ export async function marker(page: Page) {
         el.style.position = "relative";
       }
 
+      // Add padding to the element
+      el.style.padding = "12px";
+      el.style.margin = "24px";
+
       const overlay = document.createElement("div");
       overlay.style.position = "absolute";
       overlay.style.top = "0";
@@ -42,17 +48,20 @@ export async function marker(page: Page) {
       overlay.style.backgroundColor = randomColor;
       overlay.style.opacity = "0.2";
       overlay.style.pointerEvents = "none";
-      overlay.style.zIndex = "9999";
+      overlay.style.zIndex = "1";
 
       const numberLabel = document.createElement("span");
       numberLabel.textContent = number.toString();
       numberLabel.style.position = "absolute";
       numberLabel.style.top = "0";
-      numberLabel.style.right = "0";
-      numberLabel.style.background = "#fff";
-      numberLabel.style.padding = "2px 5px";
+      numberLabel.style.left = "0";
+      numberLabel.style.background = randomColor;
+      numberLabel.style.color = "#000";
+      numberLabel.style.padding = "1px 1px";
       numberLabel.style.pointerEvents = "none";
-      numberLabel.style.zIndex = "10000";
+      numberLabel.style.zIndex = "2";
+      numberLabel.style.fontSize = "10px";
+      numberLabel.style.fontWeight = "bold";
 
       el.appendChild(overlay);
       el.appendChild(numberLabel);

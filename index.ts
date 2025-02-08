@@ -1,7 +1,6 @@
 import { spawnBrowser } from "./src/browser";
 import { click } from "./src/click";
 import { marker } from "./src/mark";
-import { findAndClickInput, findAndClickLink } from "./src/temp";
 
 async function main() {
   const browser = await spawnBrowser();
@@ -11,11 +10,13 @@ async function main() {
 
   const markers = await marker(page);
 
-  // console.log(markers);
+  const element = markers.get(32);
 
-  // await page
-  //   .getByText("U.K. orders Apple to let it spy on users' encrypted accounts")
-  //   .click();
+  const boundingBox = await element!.boundingBox();
+
+  await click(page, boundingBox);
+
+  await page.screenshot({ path: "ss.png" });
 
   await page.waitForTimeout(50000);
 
