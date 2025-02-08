@@ -1,26 +1,27 @@
-import { spawnBrowser } from "./src/browser";
+import type { ElementHandle } from "playwright";
+import { createPage, spawnBrowser } from "./src/browser";
 import { click } from "./src/click";
 import { marker } from "./src/mark";
 
-async function main() {
+async function main(url: string, id: number) {
   const browser = await spawnBrowser();
+  const page = await createPage(url, browser);
 
-  const page = await browser.newPage();
-  await page.goto("https://news.ycombinator.com/news");
+  let markers: Map<number, ElementHandle<Node>>;
 
-  const markers = await marker(page);
-
-  const element = markers.get(32);
-
-  const boundingBox = await element!.boundingBox();
-
-  await click(page, boundingBox);
+  markers = await marker(page);
 
   await page.screenshot({ path: "ss.png" });
 
-  await page.waitForTimeout(50000);
+  // const element = markers.get(id);
+  // const boundingBox = await element!.boundingBox();
+  // await click(page, boundingBox);
+
+  markers = await marker(page);
+
+  await page.waitForTimeout(500000000);
 
   await browser.close();
 }
 
-main();
+main("https://meet.google.com/bvx-nxpv-kpf", 16);

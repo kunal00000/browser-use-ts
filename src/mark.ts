@@ -13,6 +13,7 @@ export async function marker(page: Page) {
       "[onclick]", // Elements with onclick handlers
       '[class*="btn"]', // Common button class patterns
       '[class*="button"]',
+      "permission", // Permission related elements
     ].join(",")
   );
 

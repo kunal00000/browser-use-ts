@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import type { ElementHandle } from "playwright";
-import { click } from "./click";
+import { click } from "../click";
 
 export async function findAndClickLink(page: Page) {
   const links: Set<String> = new Set();
@@ -9,7 +9,7 @@ export async function findAndClickLink(page: Page) {
   const elements = await page.$$("a");
   for (const element of elements) {
     const href = await element.evaluate((el) => el.href);
-    if (href && !href.includes("ycombinator")) {
+    if (href) {
       links.add(href);
       filteredElements.add(element);
 
