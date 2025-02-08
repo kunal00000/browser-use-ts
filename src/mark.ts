@@ -1,6 +1,5 @@
 import type { Page } from "playwright";
 import type { ElementHandle } from "playwright";
-import { createHighlight } from "./create-highlight";
 
 export async function marker(page: Page) {
   // Find all potentially clickable elements
@@ -25,44 +24,45 @@ export async function marker(page: Page) {
     const element = clickableElements[i];
     elementMap.set(i, element);
 
-    await element.evaluate((el, number) => createHighlight(el, number), i);
+    // Apply styling and numbering to the element
+    await element.evaluate((el, number) => {
+      const randomColor =
+        "#" + Math.floor(Math.random() * 16777215).toString(16);
+      const originalPosition = window.getComputedStyle(el).position;
+
+      // Only set position relative if it's static
+      if (originalPosition === "static") {
+        el.style.position = "relative";
+      }
+
+      const overlay = document.createElement("div");
+      overlay.style.position = "absolute";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100%";
+      overlay.style.height = "100%";
+      overlay.style.backgroundColor = randomColor;
+      overlay.style.opacity = "0.2";
+      overlay.style.pointerEvents = "none";
+      overlay.style.zIndex = "1";
+
+      const label = document.createElement("span");
+      label.textContent = number.toString();
+      label.style.position = "absolute";
+      label.style.top = "0";
+      label.style.right = "0";
+      label.style.background = randomColor;
+      label.style.color = "#FFF";
+      label.style.padding = "1px 1px";
+      label.style.pointerEvents = "none";
+      label.style.zIndex = "2";
+      label.style.fontSize = "10px";
+      label.style.fontWeight = "bold";
+
+      el.appendChild(overlay);
+      el.appendChild(label);
+    }, i);
   }
 
   return elementMap;
 }
-
-// const randomColor =
-//   "#" + Math.floor(Math.random() * 16777215).toString(16);
-// const originalPosition = window.getComputedStyle(el).position;
-
-// // Only set position relative if it's static
-// if (originalPosition === "static") {
-//   el.style.position = "relative";
-// }
-
-// const overlay = document.createElement("div");
-// overlay.style.position = "absolute";
-// overlay.style.top = "0";
-// overlay.style.left = "0";
-// overlay.style.width = "100%";
-// overlay.style.height = "100%";
-// overlay.style.backgroundColor = randomColor;
-// overlay.style.opacity = "0.2";
-// overlay.style.pointerEvents = "none";
-// overlay.style.zIndex = "1";
-
-// const numberLabel = document.createElement("span");
-// numberLabel.textContent = number.toString();
-// numberLabel.style.position = "absolute";
-// numberLabel.style.top = "0";
-// numberLabel.style.right = "0";
-// numberLabel.style.background = randomColor;
-// numberLabel.style.color = "#000";
-// numberLabel.style.padding = "1px 1px";
-// numberLabel.style.pointerEvents = "none";
-// numberLabel.style.zIndex = "2";
-// numberLabel.style.fontSize = "10px";
-// numberLabel.style.fontWeight = "bold";
-
-// el.appendChild(overlay);
-// el.appendChild(numberLabel);
