@@ -15,11 +15,34 @@ export async function findAndClickLink(page: Page) {
 
       // Add random color border to each link
 
-      await element.evaluate((el) => {
+      const linkNumber = filteredElements.size;
+      await element.evaluate((el, number) => {
         const randomColor =
           "#" + Math.floor(Math.random() * 16777215).toString(16);
         el.style.border = `2px solid ${randomColor}`;
-      });
+        el.style.position = "relative";
+
+        const overlay = document.createElement("div");
+        overlay.style.position = "absolute";
+        overlay.style.top = "0";
+        overlay.style.left = "0";
+        overlay.style.width = "100%";
+        overlay.style.height = "100%";
+        overlay.style.backgroundColor = randomColor;
+        overlay.style.opacity = "0.2";
+        overlay.style.pointerEvents = "none";
+
+        const numberLabel = document.createElement("span");
+        numberLabel.textContent = number.toString();
+        numberLabel.style.position = "absolute";
+        numberLabel.style.top = "0";
+        numberLabel.style.right = "0";
+        numberLabel.style.background = "#fff";
+        numberLabel.style.padding = "2px 5px";
+
+        el.appendChild(overlay);
+        el.appendChild(numberLabel);
+      }, linkNumber);
     }
   }
 
@@ -37,39 +60,5 @@ export async function findAndClickInput(page: Page, inputText: string) {
     if (type === "text") {
       await input.fill(inputText);
     }
-  }
-}
-export async function findAndClickLinkTemp(page: Page) {
-  const links: Set<String> = new Set();
-  const filteredElements: Set<ElementHandle<HTMLAnchorElement>> = new Set();
-  const searchText =
-    "U.K. orders Apple to let it spy on users' encrypted accounts ";
-
-  const elements = await page.$$("a");
-  for (const element of elements) {
-    const href = await element.evaluate((el) => el.href);
-    const text = await element.evaluate((el) => el.textContent);
-
-    if (
-      href &&
-      !href.includes("ycombinator") &&
-      text &&
-      text.trim() === searchText
-    ) {
-      links.add(href);
-      filteredElements.add(element);
-
-      await element.evaluate((el) => {
-        const randomColor =
-          "#" + Math.floor(Math.random() * 16777215).toString(16);
-        el.style.border = `2px solid ${randomColor}`;
-      });
-    }
-  }
-
-  const blogOne = [...filteredElements][0];
-  if (blogOne) {
-    const boundingBox = await blogOne.boundingBox();
-    await click(page, boundingBox);
   }
 }
