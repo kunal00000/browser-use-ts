@@ -17,11 +17,11 @@ async function main(url: string, id: number) {
   // const boundingBox = await element!.boundingBox();
   // await click(page, boundingBox);
 
-  markers = await marker(page);
-
   await page.waitForTimeout(500000000);
 
   await browser.close();
 }
 
-main("https://meet.google.com/bvx-nxpv-kpf", 16);
+// main("https://www.google.com/maps", 16);
+
+main("https://news.ycombinator.com/news", 16);
