@@ -1,5 +1,4 @@
-import type { Page } from "playwright";
-import type { ElementHandle } from "playwright";
+import type { ElementHandle, Page } from "playwright";
 
 export async function marker(page: Page) {
   // Find all potentially clickable elements
@@ -24,43 +23,74 @@ export async function marker(page: Page) {
     const element = clickableElements[i];
     elementMap.set(i, element);
 
-    // Apply styling and numbering to the element
     await element.evaluate((el, number) => {
+      let container = document.getElementById("playwright-highlight-container");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "playwright-highlight-container";
+        container.style.position = "absolute";
+        container.style.pointerEvents = "none";
+        container.style.top = "0";
+        container.style.left = "0";
+        container.style.width = "100%";
+        container.style.height = "100%";
+        container.style.zIndex = "2147483647";
+        document.body.appendChild(container);
+      }
+
       const randomColor =
         "#" + Math.floor(Math.random() * 16777215).toString(16);
-      const originalPosition = window.getComputedStyle(el).position;
 
-      // Only set position relative if it's static
-      if (originalPosition === "static") {
-        el.style.position = "relative";
-      }
+      const rect = el.getBoundingClientRect();
+      let top = rect.top + window.scrollY;
+      let left = rect.left + window.scrollX;
 
       const overlay = document.createElement("div");
       overlay.style.position = "absolute";
-      overlay.style.top = "0";
-      overlay.style.left = "0";
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.backgroundColor = randomColor;
-      overlay.style.opacity = "0.2";
+      overlay.style.border = `1px solid ${randomColor}`;
+      overlay.style.backgroundColor = randomColor + "1A";
       overlay.style.pointerEvents = "none";
-      overlay.style.zIndex = "1";
+      overlay.style.boxSizing = "border-box";
+      overlay.style.padding = "2px";
+      overlay.style.top = `${top}px`;
+      overlay.style.left = `${left}px`;
+      overlay.style.width = `${rect.width}px`;
+      overlay.style.height = `${rect.height}px`;
+      overlay.style.zIndex = "8";
 
-      const label = document.createElement("span");
-      label.textContent = number.toString();
-      label.style.position = "absolute";
-      label.style.top = "0";
-      label.style.right = "0";
-      label.style.background = randomColor;
-      label.style.color = "#FFF";
-      label.style.padding = "1px 1px";
-      label.style.pointerEvents = "none";
-      label.style.zIndex = "2";
-      label.style.fontSize = "10px";
-      label.style.fontWeight = "bold";
+      const numberLabel = document.createElement("span");
+      numberLabel.textContent = number.toString();
+      numberLabel.style.position = "absolute";
+      numberLabel.style.padding = "1px";
+      numberLabel.style.background = randomColor;
+      numberLabel.style.color = "#fff";
+      numberLabel.style.pointerEvents = "none";
+      numberLabel.style.fontSize = el.style.fontSize || "10px";
+      numberLabel.style.zIndex = "9";
 
-      el.appendChild(overlay);
-      el.appendChild(label);
+      let labelWidth;
+      switch (number.toString().length) {
+        case 1:
+          labelWidth = 7;
+          break;
+        case 2:
+          labelWidth = 13;
+          break;
+        case 3:
+          labelWidth = 19;
+          break;
+        case 4:
+          labelWidth = 25;
+          break;
+        default:
+          labelWidth = 13;
+      }
+
+      numberLabel.style.top = top + "px";
+      numberLabel.style.left = left + rect.width - labelWidth - 2 + "px";
+
+      container.appendChild(overlay);
+      container.appendChild(numberLabel);
     }, i);
   }
 
