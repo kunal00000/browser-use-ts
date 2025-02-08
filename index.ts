@@ -1,10 +1,19 @@
-import * as pw from "playwright";
+import { spawnBrowser } from "./src/browser";
 
-export async function spawnBrowser() {
-  const browser = await pw.chromium.launch({ headless: false });
+async function main() {
+  const browser = await spawnBrowser();
+
   const page = await browser.newPage();
-  await page.goto("https://www.google.com");
-  await page.screenshot({ path: "google.png" });
+  await page.goto("https://news.ycombinator.com/news");
+  // await page.screenshot({ path: "ss.png" });
+
+  await page.waitForTimeout(2000);
+
+  await page.mouse.wheel(0, 500);
+
+  await page.waitForTimeout(5000);
+
+  await browser.close();
 }
 
-spawnBrowser();
+main();
