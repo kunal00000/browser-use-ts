@@ -3,13 +3,13 @@ import { createPage, spawnBrowser } from "./src/browser";
 import { click } from "./src/click";
 import { marker } from "./src/mark";
 
+export let MARKERS: Map<number, ElementHandle<Node>>;
+
 async function main(url: string, id: number) {
   const browser = await spawnBrowser();
   const page = await createPage(url, browser);
 
-  let markers: Map<number, ElementHandle<Node>>;
-
-  markers = await marker(page);
+  MARKERS = await marker(page);
 
   await page.screenshot({ path: "ss.png" });
 

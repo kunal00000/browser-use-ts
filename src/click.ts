@@ -1,4 +1,6 @@
-import type { Page } from "playwright";
+import type { ElementHandle, Page } from "playwright";
+import { marker } from "./mark";
+import { MARKERS } from "..";
 
 type BoundingBox = {
   x: number;
@@ -16,4 +18,17 @@ export async function click(page: Page, boundingBox: BoundingBox) {
   } else {
     console.log("No bounding box found");
   }
+}
+
+export async function clickElementWithId(page: Page, id: number) {
+  const element = MARKERS.get(id);
+
+  if (!element) {
+    console.log("Element not found");
+    return;
+  }
+
+  const boundingBox = await element.boundingBox();
+
+  await click(page, boundingBox);
 }
