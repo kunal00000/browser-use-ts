@@ -1,15 +1,18 @@
 import type { ElementHandle } from "playwright";
 import { createPage, spawnBrowser } from "./src/browser";
 import { click } from "./src/click";
-import { marker } from "./src/mark";
+import { marker } from "./src/markers/mark";
+import { updateMarkers } from "./src/markers/mark-utils";
 
-export let MARKERS: Map<number, ElementHandle<Node>>;
+const GOOGLE_DOT_COM = "https://www.google.com";
 
 async function main(url: string, id: number) {
   const browser = await spawnBrowser();
-  const page = await createPage(url, browser);
+  const page = await createPage(GOOGLE_DOT_COM, browser);
 
-  MARKERS = await marker(page);
+  const markers = await marker(page);
+
+  updateMarkers(markers);
 
   await page.screenshot({ path: "ss.png" });
 

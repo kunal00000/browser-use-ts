@@ -96,5 +96,3 @@ export async function marker(page: Page) {
 
   return elementMap;
 }
-
-
