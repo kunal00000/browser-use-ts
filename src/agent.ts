@@ -11,8 +11,10 @@ const terminal = readline.createInterface({
   output: process.stdout,
 });
 
-export async function agent(page: Page) {
+export async function agent(initPage: Page) {
   const messages: CoreMessage[] = [{ role: "system", content: SYSTEM_PROMPT }];
+
+  let page = initPage;
 
   try {
     const userInput = await terminal.question("You: ");
@@ -54,18 +56,24 @@ export async function agent(page: Page) {
         break;
       } else if (result.object.type === "action") {
         const func = tools[result.object.function];
+
         const observation = await func(page, JSON.parse(result.object.input));
-        const obs = {
-          type: "observation",
-          observation: `${JSON.stringify(observation)}`,
-        };
 
-        console.log(observation);
+        if (result.object.function === "goToWebsite") {
+          page = observation as Page;
+        } else {
+          const obs = {
+            type: "observation",
+            observation: `${JSON.stringify(observation)}`,
+          };
 
-        messages.push({
-          role: "assistant",
-          content: JSON.stringify(obs),
-        });
+          console.log(observation);
+
+          messages.push({
+            role: "assistant",
+            content: JSON.stringify(obs),
+          });
+        }
       }
 
       messages.push({

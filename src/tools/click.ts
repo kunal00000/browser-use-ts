@@ -1,6 +1,5 @@
 import type { ElementHandle, Page } from "playwright";
-import { marker } from "./markers/mark";
-import { MARKERS } from "./markers/mark-utils";
+import { MARKERS } from "../markers/mark-utils";
 
 type BoundingBox = {
   x: number;
