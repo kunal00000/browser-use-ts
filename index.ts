@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv";
+dotenv.config();
 import { createPage, spawnBrowser } from "./src/browser";
 import { agent } from "./src/agent";
 

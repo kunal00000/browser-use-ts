@@ -23,7 +23,9 @@ export async function agent(initPage: Page) {
 
     while (true) {
       const result = await generateObject({
-        model: google("gemini-2.0-flash-lite-preview-02-05"),
+        model: google("gemini-2.0-flash-lite-preview-02-05", {
+          structuredOutputs: false,
+        }),
         messages,
         schema: z.discriminatedUnion("type", [
           z.object({

@@ -47,7 +47,7 @@ Keep iterating through PLAN → ACTION → OBSERVATION as needed. Revisit INPUT 
 
 ## Available Tools
 
-### GoToWebsite
+### goToWebsite
 Navigate to a specified website URL.
 - Input: url (string) - The website URL to navigate to
 - Example Response:
