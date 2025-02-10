@@ -1,10 +1,12 @@
-import { generateObject, type CoreMessage } from "ai";
+import { generateObject, type CoreMessage, type ImagePart } from "ai";
 import { google } from "@ai-sdk/google";
 import { SYSTEM_PROMPT } from "./system-prompt";
 import * as z from "zod";
 import { tools } from "./tools";
 import * as readline from "node:readline/promises";
 import type { Page } from "playwright";
+import { readFileSync } from "node:fs";
+import { log } from "node:console";
 const terminal = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -56,6 +58,19 @@ export async function agent(initPage: Page) {
 
         if (result.object.action.tool.toLowerCase() === "gotowebsite") {
           page = observation as Page;
+        }
+
+        if (result.object.action.tool.toLowerCase() === "requestScreenshot") {
+          const imageBytes = readFileSync("./ss.png");
+          const images: ImagePart[] = [{ type: "image", image: imageBytes }];
+
+          console.log("Screenshot captured");
+          log(images);
+
+          messages.push({
+            role: "user",
+            content: images,
+          });
         }
 
         messages.push({
