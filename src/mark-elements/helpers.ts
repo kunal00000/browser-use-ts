@@ -12,6 +12,16 @@ const clickableSelectors = [
 ];
 
 export async function markInteractableElements(page: Page) {
+  // Clear previous markings if they exist
+  await page.evaluate(() => {
+    const previousContainer = document.getElementById(
+      "playwright-highlight-container"
+    );
+    if (previousContainer) {
+      previousContainer.remove();
+    }
+  });
+
   // Find all potentially clickable elements
   const clickableElements = await page.$$(clickableSelectors.join(","));
 

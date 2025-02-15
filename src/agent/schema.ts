@@ -11,7 +11,7 @@ export const agentResponseSchema = z.object({
     .nullable()
     .optional(),
   observation: z.any().optional(),
-  next_action: z.string().optional(),
+  next_action: z.string().nullable().optional(),
   error: z.string().nullable().optional(),
   requires_user_input: z.boolean().optional(),
   user_prompt: z.string().nullable().optional(),

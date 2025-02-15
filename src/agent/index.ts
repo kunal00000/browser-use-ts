@@ -23,9 +23,10 @@ export async function agent(initPage: Page) {
 
     while (true) {
       const result = await generateObject({
-        model: google("gemini-exp-1206", {
+        model: google("gemini-2.0-flash-exp", {
           structuredOutputs: false,
         }),
+        mode: "json",
         messages,
         schema: agentResponseSchema,
       });
@@ -54,6 +55,7 @@ export async function agent(initPage: Page) {
           result.object.action.tool.toLowerCase() === "clickelementwithid"
         ) {
           // send screenshot after click
+          page = observation as Page;
           await requestScreenshot(page);
           const imageBytes = readFileSync("./ss.png");
           const images: ImagePart[] = [{ type: "image", image: imageBytes }];

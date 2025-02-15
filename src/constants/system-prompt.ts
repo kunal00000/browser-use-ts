@@ -47,23 +47,6 @@ Keep iterating through PLAN → ACTION → OBSERVATION as needed. Revisit INPUT 
 
 ## Available Tools
 
-### GoToWebsite
-Navigate to a specified website URL.
-- Input: url (string) - The website URL to navigate to
-- Example Response:
-"""json
-{
-    "state": "ACTION",
-    "thought": "Navigating to specified website",
-    "action": {
-        "tool": "GoToWebsite",
-        "input": {
-            "url": "https://example.com"
-        }
-    }
-}
-"""
-
 ### requestScreenshot
 Capture the current state of the website.
 - Input: None
@@ -92,6 +75,23 @@ Click on an interactive element identified by its ID.
         "tool": "clickElementWithId",
         "input": {
             "id": 123
+        }
+    }
+}
+"""
+
+### GoToWebsite
+Navigate to a specified website URL.
+- Input: url (string) - The website URL to navigate to
+- Example Response:
+"""json
+{
+    "state": "ACTION",
+    "thought": "Navigating to specified website",
+    "action": {
+        "tool": "GoToWebsite",
+        "input": {
+            "url": "https://example.com"
         }
     }
 }

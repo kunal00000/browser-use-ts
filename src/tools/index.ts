@@ -1,4 +1,4 @@
-import type { Page } from "playwright";
+import type { ElementHandle, Page } from "playwright";
 import { markInteractableElements } from "../mark-elements/helpers";
 import { MARKERS, updateMarkers } from "../mark-elements";
 
@@ -36,13 +36,39 @@ export async function clickElementWithId(page: Page, { id }: { id: number }) {
     return;
   }
 
-  const boundingBox = await element.boundingBox();
+  if (
+    (await element.evaluate((el: HTMLElement) => el.tagName.toLowerCase())) ===
+    "a"
+  ) {
+    const newPage = await handleLinkInNewTab(page, element);
 
-  await click(page, boundingBox);
+    return newPage;
+  }
+
+  await element.click();
+
+  return page;
 }
 
 export const tools: Record<string, Function> = {
   gotowebsite: goToWebsite,
   requestscreenshot: requestScreenshot,
   clickelementwithid: clickElementWithId,
+};
+
+//Misc Helpers
+
+export const handleLinkInNewTab = async (
+  page: Page,
+  element: ElementHandle
+) => {
+  const popupPromise = page.waitForEvent("popup");
+  await element.evaluate((el: HTMLElement) => {
+    el.setAttribute("target", "_blank");
+  });
+  await element.click();
+  const newPage = await popupPromise;
+  await newPage.waitForLoadState("domcontentloaded");
+  await newPage.bringToFront();
+  return newPage;
 };
