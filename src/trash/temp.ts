@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import type { ElementHandle } from "playwright";
-import { click } from "../click";
+import { click } from "../tools";
 
 export async function findAndClickLink(page: Page) {
   const links: Set<String> = new Set();

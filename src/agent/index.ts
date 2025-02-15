@@ -1,11 +1,13 @@
 import { generateObject, type CoreMessage, type ImagePart } from "ai";
 import { google } from "@ai-sdk/google";
-import { SYSTEM_PROMPT } from "./system-prompt";
+import { SYSTEM_PROMPT } from "../constants/system-prompt";
 import * as z from "zod";
-import { tools } from "./tools";
+import { tools } from "../tools";
 import * as readline from "node:readline/promises";
 import type { Page } from "playwright";
 import { readFileSync } from "node:fs";
+import { agentResponseSchema } from "./schema";
+
 const terminal = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -25,22 +27,7 @@ export async function agent(initPage: Page) {
           structuredOutputs: false,
         }),
         messages,
-        schema: z.object({
-          state: z.enum(["INPUT", "PLAN", "ACTION", "OBSERVATION", "OUTPUT"]),
-          thought: z.string(),
-          action: z
-            .object({
-              tool: z.string(),
-              input: z.record(z.any()),
-            })
-            .optional(),
-          observation: z.any().optional(),
-          next_action: z.string().optional(),
-          error: z.string().optional(),
-          requires_user_input: z.boolean().optional(),
-          user_prompt: z.string().optional(),
-          final_output: z.string().optional(),
-        }),
+        schema: agentResponseSchema,
       });
 
       console.log(JSON.stringify(result.object, null, 2));

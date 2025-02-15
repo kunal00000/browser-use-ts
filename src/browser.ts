@@ -1,13 +1,9 @@
 import * as pw from "playwright";
 
-export type Input = {
-  cookie: string;
-};
-
-export async function spawnBrowser(input?: Input) {
+export async function spawnBrowser() {
   const browser = await pw.chromium.launch({
     headless: false,
-    args: ["--disable-blink-features=AutomationControlled"],
+    args: ["--disable-blink-features=AutomationControlled"], // this is to prevent Playwright from being detected by websites as a bot
   });
 
   return browser;

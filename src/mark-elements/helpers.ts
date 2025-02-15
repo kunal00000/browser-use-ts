@@ -1,19 +1,19 @@
 import type { ElementHandle, Page } from "playwright";
 
-export async function marker(page: Page) {
+const clickableSelectors = [
+  "a", // Links
+  "button", // Buttons
+  '[role="button"]', // ARIA button roles
+  'input[type="button"]', // Input buttons
+  'input[type="submit"]', // Submit buttons
+  "[onclick]", // Elements with onclick handlers
+  '[class*="btn"]', // Common button class patterns
+  '[class*="button"]',
+];
+
+export async function markInteractableElements(page: Page) {
   // Find all potentially clickable elements
-  const clickableElements = await page.$$(
-    [
-      "a", // Links
-      "button", // Buttons
-      '[role="button"]', // ARIA button roles
-      'input[type="button"]', // Input buttons
-      'input[type="submit"]', // Submit buttons
-      "[onclick]", // Elements with onclick handlers
-      '[class*="btn"]', // Common button class patterns
-      '[class*="button"]',
-    ].join(",")
-  );
+  const clickableElements = await page.$$(clickableSelectors.join(","));
 
   // Create a Map to store elements with their indices
   const elementMap: Map<number, ElementHandle> = new Map();
