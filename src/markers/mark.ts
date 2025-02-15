@@ -19,11 +19,10 @@ export async function marker(page: Page) {
   const elementMap: Map<number, ElementHandle> = new Map();
 
   // Assign index and color to each element
-  for (let i = 0; i < clickableElements.length; i++) {
-    const element = clickableElements[i];
-    elementMap.set(i, element);
+  const promises = clickableElements.map((element, idx) => {
+    elementMap.set(idx, element);
 
-    await element.evaluate((el, number) => {
+    return element.evaluate((el, number) => {
       let container = document.getElementById("playwright-highlight-container");
       if (!container) {
         container = document.createElement("div");
@@ -91,8 +90,10 @@ export async function marker(page: Page) {
 
       container.appendChild(overlay);
       container.appendChild(numberLabel);
-    }, i);
-  }
+    }, idx);
+  });
+
+  await Promise.all(promises);
 
   return elementMap;
 }
