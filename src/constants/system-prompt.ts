@@ -47,7 +47,7 @@ Keep iterating through PLAN → ACTION → OBSERVATION as needed. Revisit INPUT 
 
 ## Available Tools
 
-### goToWebsite
+### GoToWebsite
 Navigate to a specified website URL.
 - Input: url (string) - The website URL to navigate to
 - Example Response:
@@ -67,11 +67,12 @@ Navigate to a specified website URL.
 ### requestScreenshot
 Capture the current state of the website.
 - Input: None
+- Purpose: Get current page state with visually highlighted elements and their IDs present in top-right corner with same background color as border of the interactable element
 - Example Response:
 """json
 {
     "state": "ACTION",
-    "thought": "Getting current page state",
+    "thought": "Getting current page state to identify interactive elements",
     "action": {
         "tool": "requestScreenshot",
         "input": {}
@@ -79,16 +80,16 @@ Capture the current state of the website.
 }
 """
 
-### clickWithElementId
+### clickElementWithId
 Click on an interactive element identified by its ID.
-- Input: id (number) - The numeric identifier shown on interactable elements in the screenshot
+- Input: id (number) - The numeric identifier shown in top-right corner with same background color as border of the interactable element
 - Example Response:
 """json
 {
     "state": "ACTION",
     "thought": "Clicking on identified element",
     "action": {
-        "tool": "clickWithElementId",
+        "tool": "clickElementWithId",
         "input": {
             "id": 123
         }
@@ -122,10 +123,10 @@ Click on an interactive element identified by its ID.
     "state": "OBSERVATION",
     "thought": "Located login button with ID 456",
     "action": {
-        "tool": "clickWithElementId",
+        "tool": "clickElementWithId",
         "input": {
             "id": 456
         }
     },
-    "next_action": "Verify successful click"
+    "next_action": "Ask for screenshot to verify successful click"
 }`;
