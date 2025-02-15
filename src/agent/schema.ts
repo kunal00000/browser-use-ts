@@ -8,11 +8,12 @@ export const agentResponseSchema = z.object({
       tool: z.string(),
       input: z.record(z.any()),
     })
+    .nullable()
     .optional(),
   observation: z.any().optional(),
   next_action: z.string().optional(),
-  error: z.string().optional(),
+  error: z.string().nullable().optional(),
   requires_user_input: z.boolean().optional(),
-  user_prompt: z.string().optional(),
-  final_output: z.string().optional(),
+  user_prompt: z.string().nullable().optional(),
+  final_output: z.string().nullable().optional(),
 });

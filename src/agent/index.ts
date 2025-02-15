@@ -2,7 +2,7 @@ import { generateObject, type CoreMessage, type ImagePart } from "ai";
 import { google } from "@ai-sdk/google";
 import { SYSTEM_PROMPT } from "../constants/system-prompt";
 import * as z from "zod";
-import { tools } from "../tools";
+import { requestScreenshot, tools } from "../tools";
 import * as readline from "node:readline/promises";
 import type { Page } from "playwright";
 import { readFileSync } from "node:fs";
@@ -35,7 +35,7 @@ export async function agent(initPage: Page) {
       if (result.object.state === "OUTPUT") {
         console.log("Final output:", result.object.final_output);
         break;
-      } else if (result.object.action) {
+      } else if (result.object.state === "ACTION" && result.object.action) {
         const func = tools[result.object.action.tool.toLowerCase()];
         const observation = await func(page, result.object.action.input);
 
@@ -49,6 +49,16 @@ export async function agent(initPage: Page) {
 
           console.log("---- screenshot sent -----");
 
+          messages.push({ role: "user", content: images });
+        } else if (
+          result.object.action.tool.toLowerCase() === "clickelementwithid"
+        ) {
+          // send screenshot after click
+          await requestScreenshot(page);
+          const imageBytes = readFileSync("./ss.png");
+          const images: ImagePart[] = [{ type: "image", image: imageBytes }];
+
+          console.log("---- screenshot sent -----");
           messages.push({ role: "user", content: images });
         } else {
           messages.push({

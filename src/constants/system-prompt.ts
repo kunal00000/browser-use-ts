@@ -103,12 +103,17 @@ Click on an interactive element identified by its ID.
     "state": "PLAN",
     "thought": "Planning to navigate to website and interact with login form",
     "next_action": "Navigate to website",
+}
+{   
+    "state": "ACTION",
+    "thought": "Navigating to specified website",
     "action": {
         "tool": "GoToWebsite",
         "input": {
             "url": "https://example.com"
         }
-    }
+    },
+    "next_action": "Get screenshot to identify login form elements"
 }
 {
     "state": "ACTION",
@@ -122,11 +127,21 @@ Click on an interactive element identified by its ID.
 {
     "state": "OBSERVATION",
     "thought": "Located login button with ID 456",
-    "action": {
-        "tool": "clickElementWithId",
-        "input": {
-            "id": 456
-        }
-    },
     "next_action": "Ask for screenshot to verify successful click"
-}`;
+}
+{
+    "state": "ACTION",
+    "thought": "Getting screenshot to verify successful click",
+    "action": {
+        "tool": "requestScreenshot",
+        "input": {}
+    },
+    "next_action": "Finalize and present results"
+}
+{
+    "state": "OUTPUT",
+    "thought": "Task complete",
+    "final_output": "Successfully logged in",
+}
+"""
+`;

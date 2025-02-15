@@ -44,5 +44,5 @@ export async function clickElementWithId(page: Page, { id }: { id: number }) {
 export const tools: Record<string, Function> = {
   gotowebsite: goToWebsite,
   requestscreenshot: requestScreenshot,
-  clickwithelementid: clickElementWithId,
+  clickelementwithid: clickElementWithId,
 };
