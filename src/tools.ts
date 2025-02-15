@@ -5,5 +5,5 @@ import { requestScreenshot } from "./tools/screenshot";
 export const tools: Record<string, Function> = {
   gotowebsite: goToWebsite,
   requestscreenshot: requestScreenshot,
-  clickelementwithid: clickElementWithId,
+  clickwithelementid: clickElementWithId,
 };

@@ -6,7 +6,6 @@ import { tools } from "./tools";
 import * as readline from "node:readline/promises";
 import type { Page } from "playwright";
 import { readFileSync } from "node:fs";
-import { log } from "node:console";
 const terminal = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -49,38 +48,31 @@ export async function agent(initPage: Page) {
       if (result.object.state === "OUTPUT") {
         console.log("Final output:", result.object.final_output);
         break;
-      } else if (result.object.state === "ACTION" && result.object.action) {
+      } else if (result.object.action) {
         const func = tools[result.object.action.tool.toLowerCase()];
-
-        //TODO: input.url handling -> for all tools basically add if else for each tool
-
-        const observation = await func(page, result.object.action.input.url);
+        const observation = await func(page, result.object.action.input);
 
         if (result.object.action.tool.toLowerCase() === "gotowebsite") {
           page = observation as Page;
-        }
-
-        if (result.object.action.tool.toLowerCase() === "requestScreenshot") {
+        } else if (
+          result.object.action.tool.toLowerCase() === "requestscreenshot"
+        ) {
           const imageBytes = readFileSync("./ss.png");
           const images: ImagePart[] = [{ type: "image", image: imageBytes }];
 
-          console.log("Screenshot captured");
-          log(images);
+          console.log("---- screenshot sent -----");
 
+          messages.push({ role: "user", content: images });
+        } else {
           messages.push({
-            role: "user",
-            content: images,
+            role: "assistant",
+            content: JSON.stringify({
+              state: "OBSERVATION",
+              thought: "Processing action result",
+              observation: observation,
+            }),
           });
         }
-
-        messages.push({
-          role: "assistant",
-          content: JSON.stringify({
-            state: "OBSERVATION",
-            thought: "Processing action result",
-            observation: observation,
-          }),
-        });
       }
 
       messages.push({

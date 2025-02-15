@@ -19,7 +19,7 @@ export async function click(page: Page, boundingBox: BoundingBox) {
   }
 }
 
-export async function clickElementWithId(page: Page, id: number) {
+export async function clickElementWithId(page: Page, { id }: { id: number }) {
   const element = MARKERS.get(id);
 
   if (!element) {
