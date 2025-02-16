@@ -69,11 +69,11 @@ export async function agent(initPage: Page) {
           if (isScrollable) {
             console.log("---- scroll available -----");
 
-            messages.push({
-              role: "user",
-              content:
-                "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
-            });
+            // messages.push({
+            //   role: "user",
+            //   content:
+            //     "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
+            // });
           }
         } else if (
           result.object.action.tool.toLowerCase() === "clickelementwithid"

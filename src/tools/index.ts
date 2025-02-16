@@ -54,14 +54,16 @@ export async function clickElementWithId(page: Page, { id }: { id: number }) {
     return;
   }
 
-  if (
-    (await element.evaluate((el: HTMLElement) => el.tagName.toLowerCase())) ===
-    "a"
-  ) {
-    const newPage = await handleLinkInNewTab(page, element);
+  //TODO:Uncomment this code to handle links in new tabs
 
-    return newPage;
-  }
+  // if (
+  //   (await element.evaluate((el: HTMLElement) => el.tagName.toLowerCase())) ===
+  //   "a"
+  // ) {
+  //   const newPage = await handleLinkInNewTab(page, element);
+
+  //   return newPage;
+  // }
 
   await element.click();
 

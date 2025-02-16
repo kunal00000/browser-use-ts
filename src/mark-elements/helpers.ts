@@ -12,6 +12,15 @@ const clickableSelectors = [
   'input[type="search"]', // Search inputs
   'input[type="tel"]', // Telephone inputs
   'input[type="url"]', // URL inputs
+  'input[type="checkbox"]', // Checkbox inputs
+  'input[type="radio"]', // Radio inputs
+  'input[type="date"]', // Date inputs
+  'input[type="time"]', // Time inputs
+  'input[type="file"]', // File inputs
+  'input[type="color"]', // Color inputs
+  'input[type="range"]', // Range inputs
+  "textarea", // Textarea elements
+  "select", // Select dropdowns
   "[onclick]", // Elements with onclick handlers
 ];
 
