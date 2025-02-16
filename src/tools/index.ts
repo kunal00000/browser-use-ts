@@ -2,6 +2,19 @@ import type { ElementHandle, Page } from "playwright";
 import { markInteractableElements } from "../mark-elements/helpers";
 import { MARKERS, updateMarkers } from "../mark-elements";
 
+export async function fillInput(
+  page: Page,
+  { id, input }: { id: number; input: string }
+) {
+  const element = await MARKERS.get(id);
+
+  if (element) {
+    await element.fill(input);
+  } else {
+    console.log("Element not found");
+  }
+}
+
 export async function requestScreenshot(page: Page) {
   const markers = await markInteractableElements(page);
   updateMarkers(markers);
@@ -54,6 +67,7 @@ export const tools: Record<string, Function> = {
   gotowebsite: goToWebsite,
   requestscreenshot: requestScreenshot,
   clickelementwithid: clickElementWithId,
+  typeininput: fillInput,
 };
 
 //Misc Helpers

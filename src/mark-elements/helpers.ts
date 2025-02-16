@@ -1,11 +1,17 @@
 import type { ElementHandle, Page } from "playwright";
-
 const clickableSelectors = [
   "a", // Links
   "button", // Buttons
   '[role="button"]', // ARIA button roles
   'input[type="button"]', // Input buttons
   'input[type="submit"]', // Submit buttons
+  'input[type="text"]', // Text inputs
+  'input[type="number"]', // Number inputs
+  'input[type="email"]', // Email inputs
+  'input[type="password"]', // Password inputs
+  'input[type="search"]', // Search inputs
+  'input[type="tel"]', // Telephone inputs
+  'input[type="url"]', // URL inputs
   "[onclick]", // Elements with onclick handlers
   '[class*="btn"]', // Common button class patterns
   '[class*="button"]',

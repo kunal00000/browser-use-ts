@@ -97,6 +97,27 @@ Navigate to a specified website URL.
 }
 """
 
+### typeInInput
+Type in an input element with specified text.
+- Input: 
+    - id (number) - The numeric identifier shown in top-right corner of the input element
+    - input (string) - The text to enter into the input field
+- Example Response:
+"""json
+{
+        "state": "ACTION",
+        "thought": "Filling input field with text",
+        "action": {
+                "tool": "typeInInput",
+                "input": {
+                        "id": 123,
+                        "input": "example text"
+                }
+        }
+}
+"""
+
+
 ## Complete Workflow Example
 """json
 {
