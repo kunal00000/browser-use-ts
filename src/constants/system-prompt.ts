@@ -117,6 +117,21 @@ Type in an input element with specified text.
 }
 """
 
+### scroll
+Scroll the page by one viewport height.
+- Input: None
+- Purpose: Scroll down the page to reveal more content
+- Example Response:
+"""json
+{
+    "state": "ACTION",
+    "thought": "Scrolling down to reveal more content",
+    "action": {
+        "tool": "scroll",
+        "input": {}
+    }
+}
+"""
 
 ## Complete Workflow Example
 """json
@@ -144,6 +159,29 @@ Type in an input element with specified text.
         "input": {}
     },
     "next_action": "Analyze screenshot for login form"
+}
+{
+    "state": "OBSERVATION",
+    "thought": "Login form elements might be below the fold, need to scroll down",
+    "next_action": "Scroll down to reveal more content"
+}
+{
+    "state": "ACTION",
+    "thought": "Scrolling down to reveal more content",
+    "action": {
+        "tool": "scroll",
+        "input": {}
+    },
+    "next_action": "Get updated screenshot after scrolling"
+}
+{
+    "state": "ACTION",
+    "thought": "Getting updated screenshot after scrolling",
+    "action": {
+        "tool": "requestScreenshot",
+        "input": {}
+    },
+    "next_action": "Analyze updated screenshot for login form"
 }
 {
     "state": "OBSERVATION",

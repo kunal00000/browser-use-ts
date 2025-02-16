@@ -2,6 +2,11 @@ import type { ElementHandle, Page } from "playwright";
 import { markInteractableElements } from "../mark-elements/helpers";
 import { MARKERS, updateMarkers } from "../mark-elements";
 
+export async function scroll(page: Page) {
+  const innerHeight = await page.evaluate(() => window.innerHeight);
+  await page.mouse.wheel(0, innerHeight);
+}
+
 export async function fillInput(
   page: Page,
   { id, input }: { id: number; input: string }
@@ -68,6 +73,7 @@ export const tools: Record<string, Function> = {
   requestscreenshot: requestScreenshot,
   clickelementwithid: clickElementWithId,
   typeininput: fillInput,
+  scroll: scroll,
 };
 
 //Misc Helpers

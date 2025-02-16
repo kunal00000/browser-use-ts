@@ -58,6 +58,23 @@ export async function agent(initPage: Page) {
           console.log("---- screenshot sent -----");
 
           messages.push({ role: "user", content: images });
+
+          const isScrollable = await page.evaluate(() => {
+            return (
+              document.documentElement.scrollHeight >
+              document.documentElement.clientHeight
+            );
+          });
+
+          if (isScrollable) {
+            console.log("---- scroll available -----");
+
+            messages.push({
+              role: "user",
+              content:
+                "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
+            });
+          }
         } else if (
           result.object.action.tool.toLowerCase() === "clickelementwithid"
         ) {

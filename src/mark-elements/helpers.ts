@@ -13,8 +13,6 @@ const clickableSelectors = [
   'input[type="tel"]', // Telephone inputs
   'input[type="url"]', // URL inputs
   "[onclick]", // Elements with onclick handlers
-  '[class*="btn"]', // Common button class patterns
-  '[class*="button"]',
 ];
 
 export async function markInteractableElements(page: Page) {
