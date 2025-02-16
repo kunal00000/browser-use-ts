@@ -12,16 +12,22 @@ const terminal = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
-
 export async function agent(initPage: Page) {
   const messages: CoreMessage[] = [{ role: "system", content: SYSTEM_PROMPT }];
   let page = initPage;
+  let messageCount = 0;
 
   try {
     const userInput = await terminal.question("You: ");
     messages.push({ role: "user", content: userInput });
 
     while (true) {
+      messageCount++;
+      if (messageCount % 10 === 0) {
+        console.log("Pausing for 1 minute to prevent rate limiting...");
+        await new Promise((resolve) => setTimeout(resolve, 60000)); // 1-minute delay
+      }
+
       const result = await generateObject({
         model: google("gemini-2.0-flash-exp", {
           structuredOutputs: false,
@@ -35,7 +41,8 @@ export async function agent(initPage: Page) {
 
       if (result.object.state === "OUTPUT") {
         console.log("Final output:", result.object.final_output);
-        break;
+        const userInput = await terminal.question("\nYou: ");
+        messages.push({ role: "user", content: userInput });
       } else if (result.object.state === "ACTION" && result.object.action) {
         const func = tools[result.object.action.tool.toLowerCase()];
         const observation = await func(page, result.object.action.input);
@@ -83,7 +90,14 @@ export async function agent(initPage: Page) {
         const userInput = await terminal.question(
           "Assistant: " + result.object.user_prompt + "\nYou: "
         );
-        messages.push({ role: "user", content: userInput });
+
+        //TODO: Add later
+
+        // messages.push({
+        //   role: "user",
+        //   content:
+        //     "Start with finding google search results. Try to you the given tools: goToWebsite, requestScreenshot and clickElementWithId.",
+        // });
       }
     }
   } catch (error) {
