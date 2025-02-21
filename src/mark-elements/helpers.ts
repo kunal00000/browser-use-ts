@@ -13,6 +13,7 @@ const clickableSelectors = [
   'input[type="tel"]', // Telephone inputs
   'input[type="url"]', // URL inputs
   "[onclick]", // Elements with onclick handlers
+  "[contenteditable]", // Editable elements
 ];
 
 export async function markInteractableElements(page: Page) {
