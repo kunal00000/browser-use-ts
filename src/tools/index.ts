@@ -14,6 +14,16 @@ export async function fillInput(
   const element = await MARKERS.get(id);
 
   if (element) {
+    const tagName = await element.evaluate((el: HTMLElement) =>
+      el.tagName.toLowerCase()
+    );
+
+    if (tagName === "div") {
+      await element.focus();
+      await page.keyboard.type(input, { delay: 50 });
+      return;
+    }
+
     await element.fill(input);
   } else {
     console.log("Element not found");
