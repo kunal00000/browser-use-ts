@@ -16,7 +16,7 @@ export async function handleSocketEvents(
     const message = JSON.parse(event.data as string);
 
     if (message.type === "USER_INPUT") {
-      await agent.handleUserMessage(message.content);
+      await agent.processUserInput(message.content);
     }
   } catch (error) {
     console.error("Socket event handler error:", error);

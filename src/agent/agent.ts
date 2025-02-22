@@ -154,28 +154,30 @@ export class Agent {
 
   private async processAIResponse(response: AgentResponse): Promise<void> {
     try {
-      this.sendWebSocketMessage({
-        type: "AI_RESPONSE",
-        content: JSON.stringify(response, null, 2),
-      });
-
-      if (response.state === "OUTPUT") {
+      if (!(response.requires_user_input && response.user_prompt)) {
         this.sendWebSocketMessage({
           type: "AI_RESPONSE",
-          content: `Final output: ${response.final_output}`,
-          requiresInput: true,
+          content: JSON.stringify(response, null, 2),
         });
-        await this.requestUserInput();
-      } else if (response.state === "ACTION") {
-        await this.exceuteAction(response.action);
-      }
 
-      this.messages.push({
-        role: "assistant",
-        content: JSON.stringify(response),
-      });
+        if (response.state === "OUTPUT") {
+          this.sendWebSocketMessage({
+            type: "AI_RESPONSE",
+            content: `Final output: ${response.final_output}`,
+            requiresInput: true,
+          });
+          await this.requestUserInput();
+        } else if (response.state === "ACTION") {
+          await this.exceuteAction(response.action);
+        }
 
-      if (response.requires_user_input && response.user_prompt) {
+        this.messages.push({
+          role: "assistant",
+          content: JSON.stringify(response),
+        });
+
+        this.processUserInput();
+      } else {
         await this.requestUserInput();
       }
     } catch (error) {
@@ -183,34 +185,20 @@ export class Agent {
     }
   }
 
-  public async handleUserMessage(message: string): Promise<void> {
-    if (this.isProcessing) {
-      this.sendWebSocketMessage({
-        type: "ERROR",
-        content: "Agent is already processing a message",
-      });
-      return;
-    }
-
+  public async processUserInput(message?: string): Promise<void> {
     try {
-      this.isProcessing = true;
-      this.messages.push({ role: "user", content: message });
-
-      while (true) {
-        this.messageCount++;
-        await this.handleRateLitmit();
-
-        const aiResponse = await this.callAI();
-        await this.processAIResponse(aiResponse);
+      if (message) {
+        this.messages.push({ role: "user", content: message });
       }
+
+      const aiResponse = await this.callAI();
+      await this.processAIResponse(aiResponse);
     } catch (error) {
       console.error("Agent execution failed:", error);
       this.sendWebSocketMessage({
         type: "ERROR",
         content: `Error: ${error}`,
       });
-    } finally {
-      this.isProcessing = false;
     }
   }
 }
