@@ -59,7 +59,7 @@ export class Agent {
 
       return result.object as AgentResponse;
     } catch (error) {
-      throw new Error("Error calling AI");
+      throw new Error(`${error}`);
     }
   }
 
