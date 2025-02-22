@@ -10,7 +10,7 @@ import { requestScreenshot, tools } from "../tools";
 import type { WSContext } from "hono/ws";
 
 interface WebSocketMessage {
-  type: "USER_INPUT" | "REQUEST_INPUT" | "AI_RESPONSE" | "ERROR";
+  type: "USER_INPUT" | "REQUEST_INPUT" | "AI_RESPONSE" | "ERROR" | "SCREENSHOT";
   content: string;
   requiresInput?: boolean;
 }
@@ -20,7 +20,6 @@ export class Agent {
   private messageCount: number;
   private page: Page;
   private ws: WSContext<ServerWebSocket>;
-  private isProcessing: boolean;
   private base64ImageUrl: string | null;
 
   constructor(page: Page, ws: WSContext<ServerWebSocket>) {
@@ -28,7 +27,6 @@ export class Agent {
     this.messageCount = 0;
     this.page = page;
     this.ws = ws;
-    this.isProcessing = false;
     this.base64ImageUrl = null;
   }
 
@@ -87,7 +85,7 @@ export class Agent {
       this.messages.push({ role: "user", content: images });
 
       this.sendWebSocketMessage({
-        type: "AI_RESPONSE",
+        type: "SCREENSHOT",
         content: this.base64ImageUrl,
       });
 

@@ -6,12 +6,9 @@ import type { Page } from "playwright";
 export async function handleSocketEvents(
   event: MessageEvent,
   ws: WSContext<ServerWebSocket>,
-  page: Page
+  page: Page,
+  agent: Agent
 ): Promise<void> {
-  console.log("Socket event:", event);
-
-  const agent = new Agent(page, ws);
-
   try {
     const message = JSON.parse(event.data as string);
 
