@@ -1,25 +1,27 @@
 import type { ServerWebSocket } from "bun";
-import type { WSMessageBody, WsMessageEvent } from "../types";
-import type { WSContext, WSMessageReceive } from "hono/ws";
+import type { WSContext } from "hono/ws";
+import { Agent } from "../agent/agent";
+import type { Page } from "playwright";
 
 export async function handleSocketEvents(
-  event: MessageEvent<WSMessageReceive>,
-  ws: WSContext<ServerWebSocket>
-) {
-  const body = event.data;
+  event: MessageEvent,
+  ws: WSContext<ServerWebSocket>,
+  page: Page,
+  agent: Agent
+): Promise<void> {
   try {
-    const message: WSMessageBody = JSON.parse(body.toString());
-    const event = message.event as WsMessageEvent;
-    switch (event) {
-      case "MESSAGE":
-        ws.send(`MESSAGE RECEIVED: ${message.data}`);
-        break;
-      case "SCREENSHOT":
-        ws.send(`SCREENSHOT RECEIVED: ${message.data}`);
-        break;
+    const message = JSON.parse(event.data as string);
+
+    if (message.type === "USER_INPUT") {
+      await agent.processUserInput(message.content);
     }
   } catch (error) {
-    console.error("Failed to parse message:", error);
-    ws.send("Invalid message format");
+    console.error("Socket event handler error:", error);
+    ws.send(
+      JSON.stringify({
+        type: "ERROR",
+        content: `Error processing message: ${error}`,
+      })
+    );
   }
 }
