@@ -3,6 +3,7 @@ dotenv.config();
 import { Hono } from "hono";
 import { createBunWebSocket } from "hono/bun";
 import type { ServerWebSocket } from "bun";
+import { handleSocketEvents } from "./src/socket/socket";
 
 const app = new Hono();
 const { upgradeWebSocket, websocket } = createBunWebSocket<ServerWebSocket>();
@@ -11,12 +12,11 @@ app.get(
   "/ws",
   upgradeWebSocket((c) => {
     return {
-      onOpen: (_event, ws) => {
+      onOpen: (_, ws) => {
         ws.send("Connection established");
       },
       onMessage(event, ws) {
-        console.log(`Message from client: ${event.data}`);
-        ws.send("Hello from server!");
+        handleSocketEvents(event, ws);
       },
       onClose: () => {
         console.log("Connection closed");
@@ -26,6 +26,7 @@ app.get(
 );
 
 export default {
+  port: 8080,
   fetch: app.fetch,
   websocket,
 };
