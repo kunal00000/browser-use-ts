@@ -38,31 +38,6 @@ export class Agent {
     }
   }
 
-  private async requestUserInput() {
-    this.sendWebSocketMessage({
-      type: "REQUEST_INPUT",
-      content: "Please provide your input",
-      requiresInput: true,
-    });
-  }
-
-  private async callAI(): Promise<AgentResponse> {
-    try {
-      const result = await generateObject({
-        model: google("gemini-2.0-flash-exp", {
-          structuredOutputs: false,
-        }),
-        mode: "json",
-        messages: this.messages,
-        schema: agentResponseSchema,
-      });
-
-      return result.object as AgentResponse;
-    } catch (error) {
-      throw new Error(`${error}`);
-    }
-  }
-
   private async handleRateLitmit(): Promise<void> {
     if (this.messageCount % 10 === 0) {
       this.sendWebSocketMessage({
@@ -108,48 +83,6 @@ export class Agent {
     }
   }
 
-  private async exceuteAction(action: AgentResponse["action"]): Promise<void> {
-    if (!action) return;
-
-    try {
-      const toolName = action.tool.toLowerCase();
-      const func = tools[toolName];
-      const observation = await func(this.page, action.input);
-
-      switch (toolName) {
-        case "gotowebsite":
-          this.page = observation as Page;
-          break;
-
-        case "requestscreenshot":
-          await this.processScreenshot();
-          break;
-
-        case "clickelementwithid":
-          this.page = observation as Page;
-          await requestScreenshot(this.page);
-          await this.processScreenshot();
-          break;
-
-        case "typeininput":
-          //TODO: Implement this tool too
-          break;
-
-        default:
-          this.messages.push({
-            role: "assistant",
-            content: JSON.stringify({
-              state: "OBSERVATION",
-              thought: "Processing action result",
-              observation: observation,
-            }),
-          });
-      }
-    } catch (error) {
-      throw new Error(`Action execution failed: ${error}`);
-    }
-  }
-
   private async processAIResponse(response: AgentResponse): Promise<void> {
     try {
       if (!(response.requires_user_input && response.user_prompt)) {
@@ -164,9 +97,53 @@ export class Agent {
             content: `Final output: ${response.final_output}`,
             requiresInput: true,
           });
-          await this.requestUserInput();
+          this.sendWebSocketMessage({
+            type: "REQUEST_INPUT",
+            content: "Please provide your input",
+            requiresInput: true,
+          });
         } else if (response.state === "ACTION") {
-          await this.exceuteAction(response.action);
+          const action = response.action;
+
+          if (!action) return;
+
+          try {
+            const toolName = action.tool.toLowerCase();
+            const func = tools[toolName];
+            const observation = await func(this.page, action.input);
+
+            switch (toolName) {
+              case "gotowebsite":
+                this.page = observation as Page;
+                break;
+
+              case "requestscreenshot":
+                await this.processScreenshot();
+                break;
+
+              case "clickelementwithid":
+                this.page = observation as Page;
+                await requestScreenshot(this.page);
+                await this.processScreenshot();
+                break;
+
+              case "typeininput":
+                //TODO: Implement this tool too
+                break;
+
+              default:
+                this.messages.push({
+                  role: "assistant",
+                  content: JSON.stringify({
+                    state: "OBSERVATION",
+                    thought: "Processing action result",
+                    observation: observation,
+                  }),
+                });
+            }
+          } catch (error) {
+            throw new Error(`Action execution failed: ${error}`);
+          }
         }
 
         this.messages.push({
@@ -174,23 +151,35 @@ export class Agent {
           content: JSON.stringify(response),
         });
 
-        this.processUserInput();
+        this.callAI();
       } else {
-        await this.requestUserInput();
+        this.sendWebSocketMessage({
+          type: "REQUEST_INPUT",
+          content: "Please provide your input",
+          requiresInput: true,
+        });
       }
     } catch (error) {
       throw new Error(`AI response processing failed: ${error}`);
     }
   }
 
-  public async processUserInput(message?: string): Promise<void> {
+  public async callAI(message?: string): Promise<void> {
     try {
       if (message) {
         this.messages.push({ role: "user", content: message });
       }
 
-      const aiResponse = await this.callAI();
-      await this.processAIResponse(aiResponse);
+      const result = await generateObject({
+        model: google("gemini-2.0-flash-exp", {
+          structuredOutputs: false,
+        }),
+        mode: "json",
+        messages: this.messages,
+        schema: agentResponseSchema,
+      });
+
+      await this.processAIResponse(result.object as AgentResponse);
     } catch (error) {
       console.error("Agent execution failed:", error);
       this.sendWebSocketMessage({

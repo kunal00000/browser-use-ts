@@ -13,7 +13,7 @@ export async function handleSocketEvents(
     const message = JSON.parse(event.data as string);
 
     if (message.type === "USER_INPUT") {
-      await agent.processUserInput(message.content);
+      await agent.callAI(message.content);
     }
   } catch (error) {
     console.error("Socket event handler error:", error);
