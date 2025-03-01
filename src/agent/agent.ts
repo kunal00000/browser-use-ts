@@ -38,7 +38,7 @@ export class Agent {
     }
   }
 
-  private async handleRateLitmit(): Promise<void> {
+  private async handleRateLimit(): Promise<void> {
     if (this.messageCount % 10 === 0) {
       this.sendWebSocketMessage({
         type: "AI_RESPONSE",
@@ -77,6 +77,7 @@ export class Agent {
           content:
             "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
         });
+        this.messageCount++;
       }
     } catch (error) {
       throw new Error(`Screenshot processing failed: ${error}`);
@@ -140,6 +141,8 @@ export class Agent {
                     observation: observation,
                   }),
                 });
+                this.messageCount++;
+                break;
             }
           } catch (error) {
             throw new Error(`Action execution failed: ${error}`);
@@ -150,6 +153,7 @@ export class Agent {
           role: "assistant",
           content: JSON.stringify(response),
         });
+        this.messageCount++;
 
         this.callAI();
       } else {
@@ -168,7 +172,10 @@ export class Agent {
     try {
       if (message) {
         this.messages.push({ role: "user", content: message });
+        this.messageCount++;
       }
+
+      await this.handleRateLimit();
 
       const result = await generateObject({
         model: google("gemini-2.0-flash-exp", {
