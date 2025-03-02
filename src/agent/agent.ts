@@ -1,13 +1,13 @@
-import { generateObject, tool, type CoreMessage, type ImagePart } from "ai";
-import type { ServerWebSocket } from "bun";
-import type { Browser, Page } from "playwright";
-import { SYSTEM_PROMPT } from "../constants/system-prompt";
 import { google } from "@ai-sdk/google";
-import { agentResponseSchema } from "./schema";
-import type { AgentResponse } from "../types";
-import { readFileSync } from "node:fs";
-import { requestScreenshot, tools } from "../tools";
+import { generateObject, type CoreMessage, type ImagePart } from "ai";
+import type { ServerWebSocket } from "bun";
 import type { WSContext } from "hono/ws";
+import { readFileSync } from "node:fs";
+import type { Page } from "playwright";
+import { SYSTEM_PROMPT } from "../constants/system-prompt";
+import { requestScreenshot, tools } from "../tools";
+import type { AgentResponse } from "../types";
+import { agentResponseSchema } from "./schema";
 
 interface WebSocketMessage {
   type: "USER_INPUT" | "REQUEST_INPUT" | "AI_RESPONSE" | "ERROR" | "SCREENSHOT";
@@ -71,14 +71,14 @@ export class Agent {
         );
       });
 
-      if (isScrollable) {
-        this.messages.push({
-          role: "user",
-          content:
-            "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
-        });
-        this.messageCount++;
-      }
+      // if (isScrollable) {
+      //   this.messages.push({
+      //     role: "user",
+      //     content:
+      //       "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
+      //   });
+      //   this.messageCount++;
+      // }
     } catch (error) {
       throw new Error(`Screenshot processing failed: ${error}`);
     }
@@ -92,18 +92,7 @@ export class Agent {
           content: JSON.stringify(response, null, 2),
         });
 
-        if (response.state === "OUTPUT") {
-          this.sendWebSocketMessage({
-            type: "AI_RESPONSE",
-            content: `Final output: ${response.final_output}`,
-            requiresInput: true,
-          });
-          this.sendWebSocketMessage({
-            type: "REQUEST_INPUT",
-            content: "Please provide your input",
-            requiresInput: true,
-          });
-        } else if (response.state === "ACTION") {
+        if (response.state === "ACTION") {
           const action = response.action;
 
           if (!action) return;
@@ -155,7 +144,15 @@ export class Agent {
         });
         this.messageCount++;
 
-        this.callAI();
+        if (response.state === "OUTPUT") {
+          this.sendWebSocketMessage({
+            type: "REQUEST_INPUT",
+            content: "Please provide your input",
+            requiresInput: true,
+          });
+        } else {
+          this.callAI();
+        }
       } else {
         this.sendWebSocketMessage({
           type: "REQUEST_INPUT",
