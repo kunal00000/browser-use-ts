@@ -1,14 +1,13 @@
+import type { ServerWebSocket } from "bun";
 import * as dotenv from "dotenv";
-dotenv.config();
 import { Hono } from "hono";
 import { createBunWebSocket } from "hono/bun";
-import type { ServerWebSocket } from "bun";
-import { handleSocketEvents } from "./socket/socket";
-import { createPage, spawnBrowser } from "./browser";
-import type { Browser, Page } from "playwright";
-import { Agent } from "./agent/agent";
-import type { WSContext } from "hono/ws";
 import { cors } from "hono/cors";
+import type { Browser, BrowserContext, Page } from "playwright";
+import { Agent } from "./agent/agent";
+import { spawnBrowser } from "./browser"; // Removed createPage import
+import { handleSocketEvents } from "./socket/socket";
+dotenv.config();
 
 const app = new Hono();
 
@@ -18,13 +17,16 @@ app.get(
   "/ws",
   upgradeWebSocket(async (c) => {
     let browser: Browser;
+    let context: BrowserContext;
     let page: Page;
     let agent: Agent;
 
     return {
       onOpen: async (_, ws) => {
         browser = await spawnBrowser();
-        page = await createPage("https://www.google.com", browser);
+        context = await browser.newContext();
+        page = await context.newPage();
+        await page.goto("https://www.google.com");
         agent = new Agent(page, ws);
       },
       onMessage(event, ws) {
@@ -50,22 +52,24 @@ const browserSessions: Map<
   string,
   {
     browser: Browser;
+    context: BrowserContext; // Added context to session tracking
     pages: Page[];
-    wsClients: Set<WSContext<ServerWebSocket>>;
     activeTab: number;
   }
 > = new Map();
 
 app.get("/browser/session", async (c) => {
   const browser = await spawnBrowser();
-  const page = await createPage("https://www.google.com", browser);
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("https://www.google.com");
   const sessionId = Math.random().toString(36).substring(2);
 
   browserSessions.set(sessionId, {
     browser,
+    context, // Added context to session
     pages: [page],
-    wsClients: new Set(),
-    activeTab: 0, // Track active tab in session
+    activeTab: 0,
   });
 
   return c.json({ sessionId });
@@ -100,7 +104,6 @@ app.get(
             ws.send(JSON.stringify({ error: "Session not found" }));
             return;
           }
-          session.wsClients.add(ws);
 
           screenshotTimer = setInterval(async () => {
             const activePage =
@@ -115,7 +118,7 @@ app.get(
                 viewport: viewport || { width: 1280, height: 720 },
               })
             );
-          }, 30);
+          }, 1000);
         }
 
         const session = browserSessions.get(sessionId!);
@@ -134,32 +137,26 @@ app.get(
             await page.keyboard.type(value);
             break;
           case "newTab":
-            const newPage = await createPage(
-              "https://www.google.com",
-              session.browser
-            );
+            const newPage = await session.context.newPage();
+            await newPage.goto("https://www.google.com");
             session.pages.push(newPage);
-            session.activeTab = session.pages.length - 1; // Set new tab as active
-            session.wsClients.forEach((client) =>
-              client.send(
-                JSON.stringify({
-                  tabs: session.pages.length,
-                  activeTab: session.activeTab,
-                })
-              )
+            session.activeTab = session.pages.length - 1;
+            ws.send(
+              JSON.stringify({
+                tabs: session.pages.length,
+                activeTab: session.activeTab,
+              })
             );
             break;
           case "switchTab":
             if (session.pages[tabIndex] && tabIndex !== session.activeTab) {
               session.activeTab = tabIndex;
               await session.pages[tabIndex].bringToFront();
-              session.wsClients.forEach((client) =>
-                client.send(JSON.stringify({ activeTab: tabIndex }))
-              );
+              ws.send(JSON.stringify({ activeTab: tabIndex }));
             }
             break;
           case "scroll":
-            await page.mouse.wheel(0, deltaY); // Scroll vertically
+            await page.mouse.wheel(0, deltaY);
             break;
           default:
             if (type !== undefined) {
@@ -188,17 +185,15 @@ app.get(
         if (sessionId) {
           const session = browserSessions.get(sessionId);
           if (session) {
-            session.wsClients.delete(ws);
-            if (session.wsClients.size === 0) {
-              await session.browser.close();
-              browserSessions.delete(sessionId);
-            }
+            await session.browser.close();
+            browserSessions.delete(sessionId);
           }
         }
       },
     };
   })
 );
+
 export default {
   port: 8080,
   fetch: app.fetch,
