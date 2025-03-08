@@ -24,7 +24,9 @@ app.get(
     return {
       onOpen: async (_, ws) => {
         browser = await spawnBrowser();
-        context = await browser.newContext();
+        context = await browser.newContext({
+          screen: { width: 1280, height: 720 },
+        });
         page = await context.newPage();
         await page.goto("https://www.google.com");
         agent = new Agent(page, ws);
@@ -60,7 +62,9 @@ const browserSessions: Map<
 
 app.get("/browser/session", async (c) => {
   const browser = await spawnBrowser();
-  const context = await browser.newContext();
+  const context = await browser.newContext({
+    screen: { width: 1280, height: 720 },
+  });
   const page = await context.newPage();
   await page.goto("https://www.google.com");
   const sessionId = Math.random().toString(36).substring(2);
