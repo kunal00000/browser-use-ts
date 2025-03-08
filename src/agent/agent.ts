@@ -1,5 +1,10 @@
 import { google } from "@ai-sdk/google";
-import { generateObject, type CoreMessage, type ImagePart } from "ai";
+import {
+  generateObject,
+  type CoreMessage,
+  type ImagePart,
+  type LanguageModelV1,
+} from "ai";
 import type { ServerWebSocket } from "bun";
 import type { WSContext } from "hono/ws";
 import { readFileSync } from "node:fs";
@@ -8,6 +13,7 @@ import { SYSTEM_PROMPT } from "../constants/system-prompt";
 import { requestScreenshot, tools } from "../tools";
 import type { AgentResponse } from "../types";
 import { agentResponseSchema } from "./schema";
+import { openai } from "@ai-sdk/openai";
 
 interface WebSocketMessage {
   type: "USER_INPUT" | "REQUEST_INPUT" | "AI_RESPONSE" | "ERROR" | "SCREENSHOT";
@@ -71,14 +77,14 @@ export class Agent {
         );
       });
 
-      // if (isScrollable) {
-      //   this.messages.push({
-      //     role: "user",
-      //     content:
-      //       "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
-      //   });
-      //   this.messageCount++;
-      // }
+      if (isScrollable) {
+        this.messages.push({
+          role: "user",
+          content:
+            "There is more content below that can be scrolled to. Try using the scroll tool. (If needed ie you dont find the answer on the current page)",
+        });
+        this.messageCount++;
+      }
     } catch (error) {
       throw new Error(`Screenshot processing failed: ${error}`);
     }
@@ -92,7 +98,23 @@ export class Agent {
           content: JSON.stringify(response, null, 2),
         });
 
-        if (response.state === "ACTION") {
+        if (response.state === "OUTPUT") {
+          this.sendWebSocketMessage({
+            type: "AI_RESPONSE",
+
+            content: `Final output: ${response.final_output}`,
+
+            requiresInput: true,
+          });
+
+          this.sendWebSocketMessage({
+            type: "REQUEST_INPUT",
+
+            content: "Please provide your input",
+
+            requiresInput: true,
+          });
+        } else if (response.state === "ACTION") {
           const action = response.action;
 
           if (!action) return;
@@ -182,6 +204,15 @@ export class Agent {
         messages: this.messages,
         schema: agentResponseSchema,
       });
+
+      // const result = await generateObject({
+      //   model: openai("gpt-4o", {
+      //     structuredOutputs: false,
+      //   }) as LanguageModelV1,
+      //   mode: "json",
+      //   messages: this.messages,
+      //   schema: agentResponseSchema,
+      // });
 
       await this.processAIResponse(result.object as AgentResponse);
     } catch (error) {

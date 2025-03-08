@@ -19,3 +19,7 @@ export async function createPage(url: string, browser: pw.Browser) {
 
   return page;
 }
+
+export async function getPages(browser: pw.Browser): Promise<pw.Page[]> {
+  return browser.contexts()[0]?.pages() || [];
+}

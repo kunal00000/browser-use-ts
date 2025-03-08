@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.11",
+    "@ai-sdk/openai": "^1.2.1",
     "ai": "^4.1.28",
     "dedent": "^1.5.3",
     "dotenv": "^16.4.7",
