@@ -1,17 +1,18 @@
 import type { ServerWebSocket } from "bun";
 import type { WSContext } from "hono/ws";
 import { Agent } from "../agent/agent";
-import type { Page } from "playwright";
+import type { WebSocketMessage } from "../types";
 
-export async function handleSocketEvents(
-  event: MessageEvent,
-  ws: WSContext<ServerWebSocket>,
-  page: Page,
-  agent: Agent
-): Promise<void> {
+export async function handleSocketEvents({
+  message,
+  ws,
+  agent,
+}: {
+  message: WebSocketMessage;
+  ws: WSContext<ServerWebSocket>;
+  agent: Agent;
+}): Promise<void> {
   try {
-    const message = JSON.parse(event.data as string);
-
     if (message.type === "USER_INPUT") {
       await agent.callAI(message.content);
     }

@@ -5,13 +5,23 @@ import { createBunWebSocket } from "hono/bun";
 import { cors } from "hono/cors";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { Agent } from "./agent/agent";
-import { spawnBrowser } from "./browser"; // Removed createPage import
+import { handleBrowserInteractivity, spawnBrowser } from "./browser";
 import { handleSocketEvents } from "./socket/socket";
+import type { BrowserInputData, MessageType, WebSocketMessage } from "./types";
 dotenv.config();
 
 const app = new Hono();
 
 const { upgradeWebSocket, websocket } = createBunWebSocket<ServerWebSocket>();
+
+app.use(
+  "/ws",
+  cors({
+    origin: "http://localhost:3000",
+    allowMethods: ["GET"],
+    allowHeaders: ["Content-Type"],
+  })
+);
 
 app.get(
   "/ws",
@@ -20,6 +30,7 @@ app.get(
     let context: BrowserContext;
     let page: Page;
     let agent: Agent;
+    let screenshotTimer: Timer | null = null;
 
     return {
       onOpen: async (_, ws) => {
@@ -30,169 +41,47 @@ app.get(
         page = await context.newPage();
         await page.goto("https://www.google.com");
         agent = new Agent(page, ws);
+
+        screenshotTimer = setInterval(async () => {
+          const screenshot = await page.screenshot();
+          const base64Screenshot = screenshot.toString("base64");
+          ws.send(
+            JSON.stringify({
+              type: "SCREENSHOT",
+              content: `data:image/png;base64,${base64Screenshot}`,
+            })
+          );
+        }, 100);
       },
-      onMessage(event, ws) {
-        handleSocketEvents(event, ws, page, agent);
-      },
-      onClose: async () => {
-        await browser?.close();
-      },
-    };
-  })
-);
+      async onMessage(event, ws) {
+        const data = JSON.parse(event.data as string) as MessageType;
 
-app.use(
-  "/browser/session",
-  cors({
-    origin: "http://localhost:3000",
-    allowMethods: ["GET"],
-    allowHeaders: ["Content-Type"],
-  })
-);
-
-const browserSessions: Map<
-  string,
-  {
-    browser: Browser;
-    context: BrowserContext; // Added context to session tracking
-    pages: Page[];
-    activeTab: number;
-  }
-> = new Map();
-
-app.get("/browser/session", async (c) => {
-  const browser = await spawnBrowser();
-  const context = await browser.newContext({
-    screen: { width: 1280, height: 720 },
-  });
-  const page = await context.newPage();
-  await page.goto("https://www.google.com");
-  const sessionId = Math.random().toString(36).substring(2);
-
-  browserSessions.set(sessionId, {
-    browser,
-    context, // Added context to session
-    pages: [page],
-    activeTab: 0,
-  });
-
-  return c.json({ sessionId });
-});
-
-app.get(
-  "/browser",
-  upgradeWebSocket(async (c) => {
-    let sessionId: string | null = null;
-    let screenshotTimer: Timer | null = null;
-
-    return {
-      onOpen: async (_, ws) => {
-        console.log("WebSocket client connected to /browser");
-      },
-      onMessage: async (event, ws) => {
-        const data = JSON.parse(event.data as string);
-        const {
-          sessionId: incomingSessionId,
-          type,
-          x,
-          y,
-          value,
-          tabIndex,
-          deltaY,
-        } = data;
-
-        if (incomingSessionId && !sessionId) {
-          sessionId = incomingSessionId;
-          const session = browserSessions.get(sessionId!);
-          if (!session) {
-            ws.send(JSON.stringify({ error: "Session not found" }));
-            return;
-          }
-
-          screenshotTimer = setInterval(async () => {
-            const activePage =
-              session.pages[session.activeTab] || session.pages[0];
-            const screenshot = await activePage.screenshot();
-            const base64Screenshot = screenshot.toString("base64");
-            const viewport = await activePage.viewportSize();
-            ws.send(
-              JSON.stringify({
-                type: "screenshot",
-                content: `data:image/png;base64,${base64Screenshot}`,
-                viewport: viewport || { width: 1280, height: 720 },
-              })
-            );
-          }, 1000);
-        }
-
-        const session = browserSessions.get(sessionId!);
-        if (!session) {
-          ws.send(JSON.stringify({ error: "Session not found" }));
+        if (data.type === "TEXT") {
+          const message = data.data as WebSocketMessage;
+          await handleSocketEvents({
+            message,
+            agent,
+            ws,
+          });
           return;
         }
 
-        const page = session.pages[tabIndex ?? session.activeTab];
+        if (data.type == "BROWSER_INPUT") {
+          const browserInputData = data.data as BrowserInputData;
 
-        switch (type) {
-          case "click":
-            await page.mouse.click(x, y);
-            break;
-          case "type":
-            await page.keyboard.type(value);
-            break;
-          case "newTab":
-            const newPage = await session.context.newPage();
-            await newPage.goto("https://www.google.com");
-            session.pages.push(newPage);
-            session.activeTab = session.pages.length - 1;
-            ws.send(
-              JSON.stringify({
-                tabs: session.pages.length,
-                activeTab: session.activeTab,
-              })
-            );
-            break;
-          case "switchTab":
-            if (session.pages[tabIndex] && tabIndex !== session.activeTab) {
-              session.activeTab = tabIndex;
-              await session.pages[tabIndex].bringToFront();
-              ws.send(JSON.stringify({ activeTab: tabIndex }));
-            }
-            break;
-          case "scroll":
-            await page.mouse.wheel(0, deltaY);
-            break;
-          default:
-            if (type !== undefined) {
-              ws.send(JSON.stringify({ error: "Unknown action" }));
-            }
-        }
-
-        if (type && ["click", "type", "scroll"].includes(type)) {
-          const screenshot = await page.screenshot();
-          const base64Screenshot = screenshot.toString("base64");
-          const viewport = await page.viewportSize();
-          ws.send(
-            JSON.stringify({
-              type: "screenshot",
-              content: `data:image/png;base64,${base64Screenshot}`,
-              viewport: viewport || { width: 1280, height: 720 },
-            })
-          );
+          await handleBrowserInteractivity({
+            browserInputData,
+            page,
+            ws,
+          });
         }
       },
-      onClose: async (_, ws) => {
-        if (screenshotTimer !== null) {
+      onClose: async () => {
+        if (screenshotTimer) {
           clearInterval(screenshotTimer);
           screenshotTimer = null;
         }
-        if (sessionId) {
-          const session = browserSessions.get(sessionId);
-          if (session) {
-            await session.browser.close();
-            browserSessions.delete(sessionId);
-          }
-        }
+        await browser?.close();
       },
     };
   })
