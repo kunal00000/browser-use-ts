@@ -51,10 +51,12 @@ app.get(
               content: `data:image/png;base64,${base64Screenshot}`,
             })
           );
-        }, 100);
+        }, 30);
       },
       async onMessage(event, ws) {
         const data = JSON.parse(event.data as string) as MessageType;
+
+        console.log("Received message:", data);
 
         if (data.type === "TEXT") {
           const message = data.data as WebSocketMessage;
