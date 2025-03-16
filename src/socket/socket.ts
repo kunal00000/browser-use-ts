@@ -6,7 +6,6 @@ import type { Page } from "playwright";
 export async function handleSocketEvents(
   event: MessageEvent,
   ws: WSContext<ServerWebSocket>,
-  page: Page,
   agent: Agent
 ): Promise<void> {
   try {

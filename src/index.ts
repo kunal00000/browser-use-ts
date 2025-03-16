@@ -4,9 +4,8 @@ import { Hono } from "hono";
 import { createBunWebSocket } from "hono/bun";
 import type { ServerWebSocket } from "bun";
 import { handleSocketEvents } from "./socket/socket";
-import { createPage, spawnBrowser } from "./browser";
-import type { Browser, Page } from "playwright";
 import { Agent } from "./agent/agent";
+import { BrowserManager } from "./browser";
 
 const app = new Hono();
 
@@ -14,21 +13,22 @@ const { upgradeWebSocket, websocket } = createBunWebSocket<ServerWebSocket>();
 app.get(
   "/ws",
   upgradeWebSocket(async (c) => {
-    let browser: Browser;
-    let page: Page;
+    let browserManager: BrowserManager;
     let agent: Agent;
 
     return {
       onOpen: async (_, ws) => {
-        browser = await spawnBrowser();
-        page = await createPage("https://www.google.com", browser);
-        agent = new Agent(page, ws);
+        browserManager = await BrowserManager.getInstance();
+        await browserManager?.createPage("https://www.google.com");
+        agent = new Agent({ browserManager, ws });
       },
       onMessage(event, ws) {
-        handleSocketEvents(event, ws, page, agent);
+        console.log("Received message:", event.data);
+
+        handleSocketEvents(event, ws, agent);
       },
       onClose: async () => {
-        await browser?.close();
+        await browserManager?.closeBrowser();
       },
     };
   })

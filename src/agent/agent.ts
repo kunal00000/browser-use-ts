@@ -8,6 +8,7 @@ import { SYSTEM_PROMPT } from "../constants/system-prompt";
 import { requestScreenshot, tools } from "../tools";
 import type { AgentResponse } from "../types";
 import { agentResponseSchema } from "./schema";
+import { BrowserManager } from "../browser";
 
 interface WebSocketMessage {
   type: "USER_INPUT" | "REQUEST_INPUT" | "AI_RESPONSE" | "ERROR" | "SCREENSHOT";
@@ -22,10 +23,16 @@ export class Agent {
   private ws: WSContext<ServerWebSocket>;
   private base64ImageUrl: string | null;
 
-  constructor(page: Page, ws: WSContext<ServerWebSocket>) {
+  constructor({
+    browserManager,
+    ws,
+  }: {
+    browserManager: BrowserManager;
+    ws: WSContext<ServerWebSocket>;
+  }) {
     this.messages = [{ role: "system", content: SYSTEM_PROMPT }];
     this.messageCount = 0;
-    this.page = page;
+    this.page = browserManager.getPage();
     this.ws = ws;
     this.base64ImageUrl = null;
   }
