@@ -59,15 +59,9 @@ app.get(
       },
 
       onMessage: async (event, ws) => {
-        console.log("Received message:", event.data);
-
         const browserInput = JSON.parse(event.data as string) as BrowserInput;
 
-        console.log("Browser input:", browserInput);
-
         if (browserInput.shouldStream === true) {
-          console.log("1");
-
           screenshotTimer = setInterval(async () => {
             const screenshot = await browserManager.takeScreenshot();
             const base64Screenshot = screenshot.toString("base64");
@@ -76,23 +70,18 @@ app.get(
                 data: `data:image/png;base64,${base64Screenshot}`,
               })
             );
-          }, 100);
+          }, 30);
         }
 
         if (browserInput.shouldStream === false) {
-          console.log("2");
           screenshotTimer && clearInterval(screenshotTimer);
         }
 
-        if (browserInput.shouldStream === null) {
-          console.log("3");
-
-          handleBrowserInteractivity({
-            browserInput,
-            browserManager,
-            ws,
-          });
-        }
+        handleBrowserInteractivity({
+          browserInput,
+          browserManager,
+          ws,
+        });
       },
 
       onClose: async () => {

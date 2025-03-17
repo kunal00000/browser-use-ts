@@ -92,8 +92,9 @@ export class BrowserManager {
 
   private static async spawnBrowser() {
     const browser = await pw.chromium.launch({
-      headless: false,
+      headless: true,
       args: ["--disable-blink-features=AutomationControlled"], // this is to prevent Playwright from being detected by websites as a bot
+      timeout: 0,
     });
 
     return browser;

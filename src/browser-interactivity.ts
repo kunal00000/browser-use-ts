@@ -10,7 +10,6 @@ export async function handleBrowserInteractivity({
 }: {
   browserInput: BrowserInput;
   browserManager: BrowserManager;
-
   ws: WSContext<ServerWebSocket>;
 }) {
   await browserManager.handleBrowserInteractivity(browserInput);
