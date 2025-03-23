@@ -32,12 +32,9 @@ app.get(
     return {
       onOpen: async (_, ws) => {
         browserManager = await BrowserManager.getInstance();
-        await browserManager?.createPage("https://www.google.com");
         agent = new Agent({ browserManager, ws });
       },
       onMessage: (event, ws) => {
-        console.log("Received message:", event.data);
-
         handleSocketEvents(event, ws, agent);
       },
       onClose: async () => {
@@ -70,11 +67,12 @@ app.get(
                 data: `data:image/png;base64,${base64Screenshot}`,
               })
             );
-          }, 30);
+          }, 100);
         }
 
         if (browserInput.shouldStream === false) {
           screenshotTimer && clearInterval(screenshotTimer);
+          screenshotTimer = null;
         }
 
         handleBrowserInteractivity({

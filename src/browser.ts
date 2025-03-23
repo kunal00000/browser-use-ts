@@ -33,6 +33,7 @@ export class BrowserManager {
         const browser = await BrowserManager.spawnBrowser();
         const context = await browser.newContext();
         const page = await context.newPage();
+        page.goto("https://google.com");
         BrowserManager.instance = new BrowserManager({
           browser,
           context,
@@ -92,7 +93,7 @@ export class BrowserManager {
 
   private static async spawnBrowser() {
     const browser = await pw.chromium.launch({
-      headless: true,
+      headless: false,
       args: ["--disable-blink-features=AutomationControlled"], // this is to prevent Playwright from being detected by websites as a bot
       timeout: 0,
     });
@@ -111,7 +112,10 @@ export class BrowserManager {
   }
 
   public async takeScreenshot() {
-    return await this.page.screenshot();
+    return await this.page.screenshot({
+      timeout: 0,
+      type: "png",
+    });
   }
 
   public async handleBrowserInteractivity(browserInput: BrowserInput) {

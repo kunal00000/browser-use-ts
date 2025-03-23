@@ -39,6 +39,8 @@ export class Agent {
 
   private sendWebSocketMessage(message: WebSocketMessage) {
     try {
+      console.log("Sending websocket message:", message);
+
       this.ws.send(JSON.stringify(message));
     } catch (error) {
       console.error("Error sending websocket message:", error);
@@ -78,14 +80,14 @@ export class Agent {
         );
       });
 
-      // if (isScrollable) {
-      //   this.messages.push({
-      //     role: "user",
-      //     content:
-      //       "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
-      //   });
-      //   this.messageCount++;
-      // }
+      if (isScrollable) {
+        this.messages.push({
+          role: "user",
+          content:
+            "There is more content below that can be scrolled to. Try using the scroll tool. (If needed)",
+        });
+        this.messageCount++;
+      }
     } catch (error) {
       throw new Error(`Screenshot processing failed: ${error}`);
     }
